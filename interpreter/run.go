@@ -12,7 +12,12 @@ func RunFile(path string) {
 		fmt.Println("Error reading file", path)
 		os.Exit(1)
 	}
-	run(string(script))
+	err = run(string(script))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(65)
+	}
 }
 
 // NOTE: This doesn't work! Solve that in a bit
@@ -23,15 +28,23 @@ func RunPrompt() {
 		if !scanner.Scan() {
 			break
 		}
-		run(scanner.Text())
+		err := run(scanner.Text())
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 }
 
-func run(source string) {
+func run(source string) error {
 	scanner := NewSourceScanner(source)
-	tokens := scanner.ScanTokens()
+	tokens, err := scanner.ScanTokens()
+	if err != nil {
+		return err
+	}
 
-	for token := range tokens {
+	for _, token := range tokens {
 		fmt.Println(token)
 	}
+
+	return nil
 }

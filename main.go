@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	if len(os.Args) > 1 {
+	if len(os.Args) > 2 {
 		fmt.Println("Usage: golox [script]")
 		os.Exit(64)
-	} else if len(os.Args) == 1 {
-		interpreter.RunFile(os.Args[0])
+	} else if len(os.Args) == 2 {
+		interpreter.RunFile(os.Args[1])
 	} else {
 		interpreter.RunPrompt()
 	}
