@@ -23,7 +23,7 @@ type Visitor interface {
 
 type Binary struct {
 	Left     Expr
-	Operator token.Token
+	Operator *token.Token
 	Right    Expr
 }
 
@@ -47,11 +47,11 @@ type Literal struct {
 
 func (*Literal) expression() {}
 func (l *Literal) Accept(visitor Visitor) interface{} {
-	return visitor.VisitLiteral(g)
+	return visitor.VisitLiteral(l)
 }
 
 type Unary struct {
-	Operator token.Token
+	Operator *token.Token
 	Right    Expr
 }
 

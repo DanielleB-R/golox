@@ -3,9 +3,12 @@ package interpreter
 import (
 	"fmt"
 	"strings"
+
+	"github.com/DanielleB-R/golox/interpreter/token"
 )
 
 var _ error = (*SourceError)(nil)
+var _ error = (*ParseError)(nil)
 
 type SourceError struct {
 	line    int
@@ -30,4 +33,16 @@ func (s SourceErrors) Error() string {
 	}
 
 	return strings.Join(errorStrings, "\n")
+}
+
+type ParseError struct {
+	token   *token.Token
+	message string
+}
+
+func (p *ParseError) Error() string {
+	if p.token.TokenType == token.EOF {
+		return fmt.Sprintf("[line %d at end] Error: %s", p.token.Line, p.message)
+	}
+	return fmt.Sprintf("[line %d at '%s'] Error: %s", p.token.Line, p.token.Lexeme, p.message)
 }

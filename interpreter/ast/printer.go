@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+var (
+	_ Visitor = (*AstPrinter)(nil)
+)
+
 type AstPrinter struct{}
 
 func (p *AstPrinter) Print(expr Expr) string {

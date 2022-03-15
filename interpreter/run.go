@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"github.com/DanielleB-R/golox/interpreter/ast"
 )
 
 func RunFile(path string) {
@@ -42,9 +44,14 @@ func run(source string) error {
 		return err
 	}
 
-	for _, token := range tokens {
-		fmt.Println(token)
+	parser := NewParser(tokens)
+	expr, err := parser.Parse()
+	if err != nil {
+		return err
 	}
+
+	printer := &ast.AstPrinter{}
+	fmt.Println(printer.Print(expr))
 
 	return nil
 }
