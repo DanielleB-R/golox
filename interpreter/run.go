@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-
-	"github.com/DanielleB-R/golox/interpreter/ast"
 )
 
 func RunFile(path string) {
@@ -50,8 +48,9 @@ func run(source string) error {
 		return err
 	}
 
-	printer := &ast.AstPrinter{}
-	fmt.Println(printer.Print(expr))
+	// NOTE: We'll need to have a global interpreter to make the repl work right
+	interpreter := &Interpreter{}
+	interpreter.Interpret(expr)
 
 	return nil
 }
