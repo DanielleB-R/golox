@@ -3,6 +3,7 @@ package ast
 import "github.com/DanielleB-R/golox/interpreter/token"
 
 var (
+	_ Expr = (*Assign)(nil)
 	_ Expr = (*Binary)(nil)
 	_ Expr = (*Grouping)(nil)
 	_ Expr = (*Literal)(nil)
@@ -16,11 +17,22 @@ type Expr interface {
 }
 
 type ExprVisitor interface {
+	VisitAssign(assign *Assign) interface{}
 	VisitBinary(binary *Binary) interface{}
 	VisitGrouping(grouping *Grouping) interface{}
 	VisitLiteral(literal *Literal) interface{}
 	VisitUnary(unary *Unary) interface{}
 	VisitVariable(variable *Variable) interface{}
+}
+
+type Assign struct {
+	Name  *token.Token
+	Value Expr
+}
+
+func (*Assign) expression() {}
+func (a *Assign) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitAssign(a)
 }
 
 type Binary struct {

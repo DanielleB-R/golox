@@ -143,6 +143,15 @@ func (i *Interpreter) VisitVariable(expr *ast.Variable) interface{} {
 	return value
 }
 
+func (i *Interpreter) VisitAssign(expr *ast.Assign) interface{} {
+	value := i.evaluate(expr.Value)
+	err := i.environment.Assign(expr.Name, value)
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
 func isTruthy(object interface{}) bool {
 	if object == nil {
 		return false

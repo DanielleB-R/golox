@@ -108,7 +108,35 @@ func (p *Parser) expressionStatement() (ast.Stmt, error) {
 }
 
 func (p *Parser) expression() (ast.Expr, error) {
-	return p.equality()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() (ast.Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(token.EQUAL) {
+		equals := p.previous()
+		value, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+		if variable, ok := expr.(*ast.Variable); ok {
+			return &ast.Assign{
+				Name:  variable.Name,
+				Value: value,
+			}, nil
+		}
+		// TODO: This should not trigger a resynchronization of the parser
+		return nil, &ParseError{
+			token:   equals,
+			message: "Invalid assignment target",
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *Parser) equality() (ast.Expr, error) {

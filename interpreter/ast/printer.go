@@ -15,6 +15,10 @@ func (p *AstPrinter) Print(expr Expr) string {
 	return expr.Accept(p).(string)
 }
 
+func (p *AstPrinter) VisitAssign(assign *Assign) interface{} {
+	return p.parenthesize("=", &Variable{Name: assign.Name}, assign.Value)
+}
+
 func (p *AstPrinter) VisitBinary(binary *Binary) interface{} {
 	return p.parenthesize(binary.Operator.Lexeme, binary.Left, binary.Right)
 }
