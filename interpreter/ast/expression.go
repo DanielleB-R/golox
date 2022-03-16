@@ -11,10 +11,10 @@ var (
 
 type Expr interface {
 	expression()
-	Accept(visitor Visitor) interface{}
+	Accept(visitor ExprVisitor) interface{}
 }
 
-type Visitor interface {
+type ExprVisitor interface {
 	VisitBinary(binary *Binary) interface{}
 	VisitGrouping(grouping *Grouping) interface{}
 	VisitLiteral(literal *Literal) interface{}
@@ -28,7 +28,7 @@ type Binary struct {
 }
 
 func (*Binary) expression() {}
-func (b *Binary) Accept(visitor Visitor) interface{} {
+func (b *Binary) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitBinary(b)
 }
 
@@ -37,7 +37,7 @@ type Grouping struct {
 }
 
 func (*Grouping) expression() {}
-func (g *Grouping) Accept(visitor Visitor) interface{} {
+func (g *Grouping) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitGrouping(g)
 }
 
@@ -46,7 +46,7 @@ type Literal struct {
 }
 
 func (*Literal) expression() {}
-func (l *Literal) Accept(visitor Visitor) interface{} {
+func (l *Literal) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitLiteral(l)
 }
 
@@ -56,6 +56,6 @@ type Unary struct {
 }
 
 func (*Unary) expression() {}
-func (u *Unary) Accept(visitor Visitor) interface{} {
+func (u *Unary) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitUnary(u)
 }

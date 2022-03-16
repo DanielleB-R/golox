@@ -1,8 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/DanielleB-R/golox/interpreter/ast"
 	"github.com/DanielleB-R/golox/interpreter/token"
 )
@@ -19,21 +17,67 @@ func NewParser(tokens []*token.Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() (ast.Expr, error) {
-	expr, err := p.expression()
-	if err == nil {
-		return expr, nil
+func (p *Parser) Parse() ([]ast.Stmt, error) {
+	statements := []ast.Stmt{}
+	for !p.isAtEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			return statements, err
+		}
+		statements = append(statements, stmt)
 	}
 
-	_, ok := err.(*ParseError)
-	if !ok {
-		return nil, err
-	}
-	fmt.Println(err.Error())
-	return nil, nil
+	return statements, nil
+	// if err == nil {
+	// 	return expr, nil
+	// }
+
+	// _, ok := err.(*ParseError)
+	// if !ok {
+	// 	return nil, err
+	// }
+	// fmt.Println(err.Error())
+	// return nil, nil
 }
 
 // Grammar rules
+
+func (p *Parser) statement() (ast.Stmt, error) {
+	if p.match(token.PRINT) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() (ast.Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after expression.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.Print{
+		Expression: expr,
+	}, nil
+}
+
+func (p *Parser) expressionStatement() (ast.Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after expression.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionStmt{
+		Expression: expr,
+	}, nil
+}
 
 func (p *Parser) expression() (ast.Expr, error) {
 	return p.equality()

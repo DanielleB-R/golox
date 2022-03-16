@@ -8,12 +8,13 @@ import (
 )
 
 var (
-	_ ast.Visitor = (*Interpreter)(nil)
+	_ ast.ExprVisitor = (*Interpreter)(nil)
+	_ ast.StmtVisitor = (*Interpreter)(nil)
 )
 
 type Interpreter struct{}
 
-func (i *Interpreter) Interpret(expression ast.Expr) {
+func (i *Interpreter) Interpret(statements []ast.Stmt) {
 	defer func() {
 		err := recover()
 		if err == nil {
@@ -26,7 +27,21 @@ func (i *Interpreter) Interpret(expression ast.Expr) {
 		panic(err)
 	}()
 
-	value := i.evaluate(expression)
+	for _, statement := range statements {
+		i.execute(statement)
+	}
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) {
+	stmt.Accept(i)
+}
+
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
+	i.evaluate(stmt.Expression)
+}
+
+func (i *Interpreter) VisitPrint(stmt *ast.Print) {
+	value := i.evaluate(stmt.Expression)
 	fmt.Println(value)
 }
 

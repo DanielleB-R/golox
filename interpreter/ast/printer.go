@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	_ Visitor = (*AstPrinter)(nil)
+	_ ExprVisitor = (*AstPrinter)(nil)
 )
 
 type AstPrinter struct{}
