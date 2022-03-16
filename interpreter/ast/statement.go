@@ -14,6 +14,7 @@ type Stmt interface {
 }
 
 type StmtVisitor interface {
+	VisitBlock(stmt *Block)
 	VisitExpressionStmt(stmt *ExpressionStmt)
 	VisitPrint(stmt *Print)
 	VisitVar(stmt *Var)
@@ -45,4 +46,13 @@ type Var struct {
 func (*Var) statement() {}
 func (v *Var) Accept(visitor StmtVisitor) {
 	visitor.VisitVar(v)
+}
+
+type Block struct {
+	Statements []Stmt
+}
+
+func (*Block) statement() {}
+func (b *Block) Accept(visitor StmtVisitor) {
+	visitor.VisitBlock(b)
 }

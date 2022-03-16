@@ -17,7 +17,7 @@ func tokenNamed(name string) *token.Token {
 }
 
 func TestBasicEnvironment(t *testing.T) {
-	environment := NewEnvironment()
+	environment := NewEnvironment(nil)
 
 	require.Len(t, environment.values, 0)
 
@@ -34,15 +34,55 @@ func TestBasicEnvironment(t *testing.T) {
 
 	result, err = environment.Get(tokenNamed("b"))
 	require.NoError(t, err)
-	require.Equal(t, result, "print")
+	require.Equal(t, "print", result)
 
 	err = environment.Assign(tokenNamed("a"), 200)
 	require.NoError(t, err)
 
 	result, err = environment.Get(tokenNamed("a"))
 	require.NoError(t, err)
-	require.Equal(t, result, 200)
+	require.Equal(t, 200, result)
 
 	err = environment.Assign(tokenNamed("c"), nil)
+	require.Error(t, err)
+}
+
+func TestEnclosingEnvironments(t *testing.T) {
+	outer := NewEnvironment(nil)
+
+	outer.Define("a", 20)
+	outer.Define("b", "print")
+
+	inner := NewEnvironment(outer)
+
+	result, err := inner.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, 20, result)
+
+	err = inner.Assign(tokenNamed("a"), 200)
+	require.NoError(t, err)
+
+	result, err = inner.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, 200, result)
+
+	result, err = outer.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, 200, result)
+
+	inner.Define("b", "var")
+
+	result, err = inner.Get(tokenNamed("b"))
+	require.NoError(t, err)
+	require.Equal(t, "var", result)
+
+	result, err = outer.Get(tokenNamed("b"))
+	require.NoError(t, err)
+	require.Equal(t, "print", result)
+
+	result, err = inner.Get(tokenNamed("c"))
+	require.Error(t, err)
+
+	err = inner.Assign(tokenNamed("c"), nil)
 	require.Error(t, err)
 }
