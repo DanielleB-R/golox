@@ -34,6 +34,10 @@ func (p *AstPrinter) VisitUnary(unary *Unary) interface{} {
 	return p.parenthesize(unary.Operator.Lexeme, unary.Right)
 }
 
+func (p *AstPrinter) VisitVariable(variable *Variable) interface{} {
+	return variable.Name.Lexeme
+}
+
 func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	exprRepresentations := []string{}
 	for _, expr := range exprs {

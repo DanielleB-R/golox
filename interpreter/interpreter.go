@@ -12,7 +12,15 @@ var (
 	_ ast.StmtVisitor = (*Interpreter)(nil)
 )
 
-type Interpreter struct{}
+type Interpreter struct {
+	environment *Environment
+}
+
+func NewInterpreter() *Interpreter {
+	return &Interpreter{
+		environment: NewEnvironment(),
+	}
+}
 
 func (i *Interpreter) Interpret(statements []ast.Stmt) {
 	defer func() {
@@ -43,6 +51,15 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 func (i *Interpreter) VisitPrint(stmt *ast.Print) {
 	value := i.evaluate(stmt.Expression)
 	fmt.Println(value)
+}
+
+func (i *Interpreter) VisitVar(stmt *ast.Var) {
+	var value interface{}
+	if stmt.Initializer != nil {
+		value = i.evaluate(stmt.Initializer)
+	}
+
+	i.environment.Define(stmt.Name.Lexeme, value)
 }
 
 func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
@@ -116,6 +133,14 @@ func (i *Interpreter) VisitBinary(binary *ast.Binary) interface{} {
 
 	// Should be unreachable
 	return nil
+}
+
+func (i *Interpreter) VisitVariable(expr *ast.Variable) interface{} {
+	value, err := i.environment.Get(expr.Name)
+	if err != nil {
+		panic(err)
+	}
+	return value
 }
 
 func isTruthy(object interface{}) bool {

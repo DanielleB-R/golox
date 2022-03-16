@@ -7,6 +7,7 @@ var (
 	_ Expr = (*Grouping)(nil)
 	_ Expr = (*Literal)(nil)
 	_ Expr = (*Unary)(nil)
+	_ Expr = (*Variable)(nil)
 )
 
 type Expr interface {
@@ -19,6 +20,7 @@ type ExprVisitor interface {
 	VisitGrouping(grouping *Grouping) interface{}
 	VisitLiteral(literal *Literal) interface{}
 	VisitUnary(unary *Unary) interface{}
+	VisitVariable(variable *Variable) interface{}
 }
 
 type Binary struct {
@@ -58,4 +60,13 @@ type Unary struct {
 func (*Unary) expression() {}
 func (u *Unary) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitUnary(u)
+}
+
+type Variable struct {
+	Name *token.Token
+}
+
+func (*Variable) expression() {}
+func (v *Variable) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitVariable(v)
 }

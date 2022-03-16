@@ -8,39 +8,67 @@ import (
 type Parser struct {
 	tokens  []*token.Token
 	current int
+	errors  ParseErrors
 }
 
 func NewParser(tokens []*token.Token) *Parser {
 	return &Parser{
 		tokens:  tokens,
 		current: 0,
+		errors:  ParseErrors{},
 	}
 }
 
 func (p *Parser) Parse() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
 	for !p.isAtEnd() {
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
-			return statements, err
+			parseErr, ok := err.(*ParseError)
+			if !ok {
+				return statements, err
+			}
+			p.errors = append(p.errors, parseErr)
+			p.synchronize()
 		}
 		statements = append(statements, stmt)
 	}
 
 	return statements, nil
-	// if err == nil {
-	// 	return expr, nil
-	// }
-
-	// _, ok := err.(*ParseError)
-	// if !ok {
-	// 	return nil, err
-	// }
-	// fmt.Println(err.Error())
-	// return nil, nil
 }
 
 // Grammar rules
+
+func (p *Parser) declaration() (ast.Stmt, error) {
+	if p.match(token.VAR) {
+		return p.varStatement()
+	}
+	return p.statement()
+}
+
+func (p *Parser) varStatement() (ast.Stmt, error) {
+	name, err := p.consume(token.IDENTIFIER, "Expect variable name.")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer ast.Expr
+	if p.match(token.EQUAL) {
+		initializer, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after variable declaration.")
+	if err != nil {
+		return nil, err
+	}
+	return &ast.Var{
+		Name:        name,
+		Initializer: initializer,
+	}, nil
+}
 
 func (p *Parser) statement() (ast.Stmt, error) {
 	if p.match(token.PRINT) {
@@ -209,6 +237,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}, nil
 	}
 
+	if p.match(token.IDENTIFIER) {
+		return &ast.Variable{
+			Name: p.previous(),
+		}, nil
+	}
+
 	if p.match(token.LEFT_PAREN) {
 		expr, err := p.expression()
 		if err != nil {
@@ -275,4 +309,21 @@ func (p *Parser) consume(tokenType int, message string) (*token.Token, error) {
 	}
 
 	return nil, &ParseError{token: p.peek(), message: message}
+}
+
+func (p *Parser) synchronize() {
+	p.advance()
+
+	for !p.isAtEnd() {
+		if p.previous().TokenType == token.SEMICOLON {
+			return
+		}
+
+		switch p.peek().TokenType {
+		case token.CLASS, token.FUN, token.VAR, token.FOR, token.IF, token.WHILE, token.PRINT, token.RETURN:
+			return
+		}
+
+		p.advance()
+	}
 }

@@ -47,6 +47,17 @@ func (p *ParseError) Error() string {
 	return fmt.Sprintf("[line %d at '%s'] Error: %s", p.token.Line, p.token.Lexeme, p.message)
 }
 
+type ParseErrors []*ParseError
+
+func (s ParseErrors) Error() string {
+	errorStrings := []string{}
+	for _, e := range s {
+		errorStrings = append(errorStrings, e.Error())
+	}
+
+	return strings.Join(errorStrings, "\n")
+}
+
 type RuntimeError struct {
 	token   *token.Token
 	message string

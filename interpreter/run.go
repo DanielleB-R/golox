@@ -43,14 +43,14 @@ func run(source string) error {
 	}
 
 	parser := NewParser(tokens)
-	expr, err := parser.Parse()
+	statements, err := parser.Parse()
 	if err != nil {
 		return err
 	}
 
 	// NOTE: We'll need to have a global interpreter to make the repl work right
-	interpreter := &Interpreter{}
-	interpreter.Interpret(expr)
+	interpreter := NewInterpreter()
+	interpreter.Interpret(statements)
 
 	return nil
 }
