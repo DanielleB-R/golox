@@ -34,6 +34,10 @@ func (p *AstPrinter) VisitLiteral(literal *Literal) interface{} {
 	return fmt.Sprint(literal.Value)
 }
 
+func (p *AstPrinter) VisitLogical(logical *Logical) interface{} {
+	return p.parenthesize(logical.Operator.Lexeme, logical.Left, logical.Right)
+}
+
 func (p *AstPrinter) VisitUnary(unary *Unary) interface{} {
 	return p.parenthesize(unary.Operator.Lexeme, unary.Right)
 }

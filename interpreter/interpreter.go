@@ -65,6 +65,14 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 	i.evaluate(stmt.Expression)
 }
 
+func (i *Interpreter) VisitIf(stmt *ast.If) {
+	if isTruthy(i.evaluate(stmt.Condition)) {
+		i.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		i.execute(stmt.ElseBranch)
+	}
+}
+
 func (i *Interpreter) VisitPrint(stmt *ast.Print) {
 	value := i.evaluate(stmt.Expression)
 	fmt.Println(value)
@@ -167,6 +175,22 @@ func (i *Interpreter) VisitAssign(expr *ast.Assign) interface{} {
 		panic(err)
 	}
 	return value
+}
+
+func (i *Interpreter) VisitLogical(expr *ast.Logical) interface{} {
+	left := i.evaluate(expr.Left)
+
+	if expr.Operator.TokenType == token.OR {
+		if isTruthy(left) {
+			return left
+		}
+	} else {
+		if !isTruthy(left) {
+			return left
+		}
+	}
+
+	return i.evaluate(expr.Right)
 }
 
 func isTruthy(object interface{}) bool {
