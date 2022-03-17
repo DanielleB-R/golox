@@ -3,9 +3,12 @@ package ast
 import "github.com/DanielleB-R/golox/interpreter/token"
 
 var (
+	_ Stmt = (*Block)(nil)
 	_ Stmt = (*ExpressionStmt)(nil)
+	_ Stmt = (*If)(nil)
 	_ Stmt = (*Print)(nil)
 	_ Stmt = (*Var)(nil)
+	_ Stmt = (*While)(nil)
 )
 
 type Stmt interface {
@@ -19,6 +22,7 @@ type StmtVisitor interface {
 	VisitIf(stmt *If)
 	VisitPrint(stmt *Print)
 	VisitVar(stmt *Var)
+	VisitWhile(stmt *While)
 }
 
 type ExpressionStmt struct {
@@ -58,6 +62,16 @@ type Var struct {
 func (*Var) statement() {}
 func (v *Var) Accept(visitor StmtVisitor) {
 	visitor.VisitVar(v)
+}
+
+type While struct {
+	Condition Expr
+	Body      Stmt
+}
+
+func (*While) statement() {}
+func (w *While) Accept(visitor StmtVisitor) {
+	visitor.VisitWhile(w)
 }
 
 type Block struct {
