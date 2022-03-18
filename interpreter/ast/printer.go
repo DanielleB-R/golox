@@ -23,6 +23,11 @@ func (p *AstPrinter) VisitBinary(binary *Binary) interface{} {
 	return p.parenthesize(binary.Operator.Lexeme, binary.Left, binary.Right)
 }
 
+func (p *AstPrinter) VisitCall(call *Call) interface{} {
+	callee := p.Print(call.Callee)
+	return p.parenthesize(callee, call.Arguments...)
+}
+
 func (p *AstPrinter) VisitGrouping(grouping *Grouping) interface{} {
 	return p.parenthesize("group", grouping.Expression)
 }

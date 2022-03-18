@@ -5,6 +5,7 @@ import "github.com/DanielleB-R/golox/interpreter/token"
 var (
 	_ Stmt = (*Block)(nil)
 	_ Stmt = (*ExpressionStmt)(nil)
+	_ Stmt = (*Function)(nil)
 	_ Stmt = (*If)(nil)
 	_ Stmt = (*Print)(nil)
 	_ Stmt = (*Var)(nil)
@@ -19,6 +20,7 @@ type Stmt interface {
 type StmtVisitor interface {
 	VisitBlock(stmt *Block)
 	VisitExpressionStmt(stmt *ExpressionStmt)
+	VisitFunction(stmt *Function)
 	VisitIf(stmt *If)
 	VisitPrint(stmt *Print)
 	VisitVar(stmt *Var)
@@ -32,6 +34,17 @@ type ExpressionStmt struct {
 func (*ExpressionStmt) statement() {}
 func (e *ExpressionStmt) Accept(visitor StmtVisitor) {
 	visitor.VisitExpressionStmt(e)
+}
+
+type Function struct {
+	Name   *token.Token
+	Params []*token.Token
+	Body   []Stmt
+}
+
+func (*Function) statement() {}
+func (f *Function) Accept(visitor StmtVisitor) {
+	visitor.VisitFunction(f)
 }
 
 type If struct {

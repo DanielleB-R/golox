@@ -13,12 +13,16 @@ var (
 )
 
 type Interpreter struct {
+	globals     *Environment
 	environment *Environment
 }
 
 func NewInterpreter() *Interpreter {
+	globals := NewEnvironment(nil)
+	globals.Define("clock", Clock)
 	return &Interpreter{
-		environment: NewEnvironment(nil),
+		globals:     globals,
+		environment: globals,
 	}
 }
 
@@ -63,6 +67,11 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 
 func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 	i.evaluate(stmt.Expression)
+}
+
+func (i *Interpreter) VisitFunction(stmt *ast.Function) {
+	function := NewLoxFunction(stmt)
+	i.environment.Define(stmt.Name.Lexeme, function)
 }
 
 func (i *Interpreter) VisitIf(stmt *ast.If) {
@@ -197,6 +206,24 @@ func (i *Interpreter) VisitLogical(expr *ast.Logical) interface{} {
 	}
 
 	return i.evaluate(expr.Right)
+}
+
+func (i *Interpreter) VisitCall(expr *ast.Call) interface{} {
+	callee := i.evaluate(expr.Callee)
+
+	arguments := []interface{}{}
+	for _, argument := range expr.Arguments {
+		arguments = append(arguments, i.evaluate(argument))
+	}
+
+	function, ok := callee.(Callable)
+	if !ok {
+		panic(&RuntimeError{token: expr.Paren, message: "Can only call functions and classes."})
+	}
+	if len(arguments) != function.Arity() {
+		panic(&RuntimeError{token: expr.Paren, message: fmt.Sprintf("Expected %d arguments but got %d.", function.Arity(), len(arguments))})
+	}
+	return function.Call(i, arguments)
 }
 
 func isTruthy(object interface{}) bool {
