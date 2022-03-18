@@ -13,16 +13,20 @@ var (
 )
 
 type Interpreter struct {
-	globals     *Environment
-	environment *Environment
+	globals           *Environment
+	environment       *Environment
+	activeReturn      bool
+	activeReturnValue interface{}
 }
 
 func NewInterpreter() *Interpreter {
 	globals := NewEnvironment(nil)
 	globals.Define("clock", Clock)
 	return &Interpreter{
-		globals:     globals,
-		environment: globals,
+		globals:           globals,
+		environment:       globals,
+		activeReturn:      false,
+		activeReturnValue: nil,
 	}
 }
 
@@ -41,6 +45,7 @@ func (i *Interpreter) Interpret(statements []ast.Stmt) {
 
 	for _, statement := range statements {
 		i.execute(statement)
+		i.resetReturnValue()
 	}
 }
 
@@ -62,6 +67,9 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 
 	for _, statement := range statements {
 		i.execute(statement)
+		if i.activeReturn {
+			return
+		}
 	}
 }
 
@@ -87,6 +95,16 @@ func (i *Interpreter) VisitPrint(stmt *ast.Print) {
 	fmt.Println(value)
 }
 
+func (i *Interpreter) VisitReturn(stmt *ast.Return) {
+	var value interface{}
+	if stmt.Value != nil {
+		value = i.evaluate(stmt.Value)
+	}
+
+	i.activeReturn = true
+	i.activeReturnValue = value
+}
+
 func (i *Interpreter) VisitVar(stmt *ast.Var) {
 	var value interface{}
 	if stmt.Initializer != nil {
@@ -99,6 +117,9 @@ func (i *Interpreter) VisitVar(stmt *ast.Var) {
 func (i *Interpreter) VisitWhile(stmt *ast.While) {
 	for isTruthy(i.evaluate(stmt.Condition)) {
 		i.execute(stmt.Body)
+		if i.activeReturn {
+			return
+		}
 	}
 }
 
@@ -224,6 +245,11 @@ func (i *Interpreter) VisitCall(expr *ast.Call) interface{} {
 		panic(&RuntimeError{token: expr.Paren, message: fmt.Sprintf("Expected %d arguments but got %d.", function.Arity(), len(arguments))})
 	}
 	return function.Call(i, arguments)
+}
+
+func (i *Interpreter) resetReturnValue() {
+	i.activeReturn = false
+	i.activeReturnValue = nil
 }
 
 func isTruthy(object interface{}) bool {

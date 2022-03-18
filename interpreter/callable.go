@@ -60,7 +60,9 @@ func (l *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 	}
 
 	interpreter.executeBlock(l.declaration.Body, environment)
-	return nil
+	returnValue := interpreter.activeReturnValue
+	interpreter.resetReturnValue()
+	return returnValue
 }
 
 func (l *LoxFunction) Arity() int {

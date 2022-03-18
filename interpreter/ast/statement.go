@@ -8,6 +8,7 @@ var (
 	_ Stmt = (*Function)(nil)
 	_ Stmt = (*If)(nil)
 	_ Stmt = (*Print)(nil)
+	_ Stmt = (*Return)(nil)
 	_ Stmt = (*Var)(nil)
 	_ Stmt = (*While)(nil)
 )
@@ -23,6 +24,7 @@ type StmtVisitor interface {
 	VisitFunction(stmt *Function)
 	VisitIf(stmt *If)
 	VisitPrint(stmt *Print)
+	VisitReturn(stmt *Return)
 	VisitVar(stmt *Var)
 	VisitWhile(stmt *While)
 }
@@ -65,6 +67,16 @@ type Print struct {
 func (*Print) statement() {}
 func (p *Print) Accept(visitor StmtVisitor) {
 	visitor.VisitPrint(p)
+}
+
+type Return struct {
+	Keyword *token.Token
+	Value   Expr
+}
+
+func (*Return) statement() {}
+func (p *Return) Accept(visitor StmtVisitor) {
+	visitor.VisitReturn(p)
 }
 
 type Var struct {
