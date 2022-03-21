@@ -77,7 +77,14 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 
 func (i *Interpreter) VisitClass(stmt *ast.Class) {
 	i.environment.Define(stmt.Name.Lexeme, nil)
-	class := NewLoxClass(stmt.Name.Lexeme)
+
+	methods := map[string]*LoxFunction{}
+	for _, method := range stmt.Methods {
+		function := NewLoxFunction(method, i.environment)
+		methods[method.Name.Lexeme] = function
+	}
+
+	class := NewLoxClass(stmt.Name.Lexeme, methods)
 	i.environment.Assign(stmt.Name, class)
 }
 
@@ -140,8 +147,40 @@ func (*Interpreter) VisitLiteral(literal *ast.Literal) interface{} {
 	return literal.Value
 }
 
+func (i *Interpreter) VisitGet(get *ast.Get) any {
+	object := i.evaluate(get.Object)
+	if instance, ok := object.(*LoxInstance); ok {
+		value, err := instance.Get(get.Name)
+		if err != nil {
+			panic(err)
+		}
+		return value
+	}
+
+	panic(&RuntimeError{
+		token:   get.Name,
+		message: "Only instances have properties.",
+	})
+}
+
 func (i *Interpreter) VisitGrouping(grouping *ast.Grouping) interface{} {
 	return i.evaluate(grouping.Expression)
+}
+
+func (i *Interpreter) VisitSet(set *ast.Set) any {
+	object := i.evaluate(set.Object)
+
+	instance, ok := object.(*LoxInstance)
+	if !ok {
+		panic(&RuntimeError{
+			token:   set.Name,
+			message: "Only instances have fields.",
+		})
+	}
+
+	value := i.evaluate(set.Value)
+	instance.Set(set.Name, value)
+	return value
 }
 
 func (i *Interpreter) VisitUnary(unary *ast.Unary) interface{} {

@@ -411,6 +411,12 @@ func (p *Parser) assignment() (ast.Expr, error) {
 				Name:  variable.Name,
 				Value: value,
 			}, nil
+		} else if get, ok := expr.(*ast.Get); ok {
+			return &ast.Set{
+				Object: get.Object,
+				Name:   get.Name,
+				Value:  value,
+			}, nil
 		}
 		// TODO: This should not trigger a resynchronization of the parser
 		return nil, &ParseError{
@@ -580,6 +586,15 @@ func (p *Parser) call() (ast.Expr, error) {
 			expr, err = p.finishCall(expr)
 			if err != nil {
 				return nil, err
+			}
+		} else if p.match(token.DOT) {
+			name, err := p.consume(token.IDENTIFIER, "Expect property name after '.'.")
+			if err != nil {
+				return nil, err
+			}
+			expr = &ast.Get{
+				Object: expr,
+				Name:   name,
 			}
 		} else {
 			break

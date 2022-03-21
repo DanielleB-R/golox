@@ -28,6 +28,10 @@ func (p *AstPrinter) VisitCall(call *Call) interface{} {
 	return p.parenthesize(callee, call.Arguments...)
 }
 
+func (p *AstPrinter) VisitGet(get *Get) any {
+	return p.parenthesize("."+get.Name.Lexeme, get.Object)
+}
+
 func (p *AstPrinter) VisitGrouping(grouping *Grouping) interface{} {
 	return p.parenthesize("group", grouping.Expression)
 }
@@ -41,6 +45,10 @@ func (p *AstPrinter) VisitLiteral(literal *Literal) interface{} {
 
 func (p *AstPrinter) VisitLogical(logical *Logical) interface{} {
 	return p.parenthesize(logical.Operator.Lexeme, logical.Left, logical.Right)
+}
+
+func (p *AstPrinter) VisitSet(set *Set) any {
+	return p.parenthesize(fmt.Sprintf(".%s=", set.Name.Lexeme), set.Object, set.Value)
 }
 
 func (p *AstPrinter) VisitUnary(unary *Unary) interface{} {
