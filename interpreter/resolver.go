@@ -10,15 +10,24 @@ var (
 	_ ast.StmtVisitor = (*Resolver)(nil)
 )
 
+type FunctionType = int
+
+const (
+	NO_FUNCTION FunctionType = iota
+	FUNCTION
+)
+
 type Resolver struct {
-	interpreter *Interpreter
-	scopes      []map[string]bool
+	interpreter     *Interpreter
+	scopes          []map[string]bool
+	currentFunction FunctionType
 }
 
 func NewResolver(interpreter *Interpreter) *Resolver {
 	return &Resolver{
-		interpreter: interpreter,
-		scopes:      []map[string]bool{},
+		interpreter:     interpreter,
+		scopes:          []map[string]bool{},
+		currentFunction: NO_FUNCTION,
 	}
 }
 
@@ -50,7 +59,7 @@ func (r *Resolver) VisitFunction(stmt *ast.Function) {
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
 
-	r.resolveFunction(stmt)
+	r.resolveFunction(stmt, FUNCTION)
 }
 
 func (r *Resolver) VisitIf(stmt *ast.If) {
@@ -66,6 +75,10 @@ func (r *Resolver) VisitPrint(stmt *ast.Print) {
 }
 
 func (r *Resolver) VisitReturn(stmt *ast.Return) {
+	if r.currentFunction == NO_FUNCTION {
+		panic("Can't return from top-level code")
+	}
+
 	if stmt.Value != nil {
 		r.resolveExpr(stmt.Value)
 	}
@@ -149,7 +162,13 @@ func (r *Resolver) declare(name *token.Token) {
 		return
 	}
 
-	r.scopes[len(r.scopes)-1][name.Lexeme] = false
+	scope := r.scopes[len(r.scopes)-1]
+	if _, ok := scope[name.Lexeme]; ok {
+		// TODO: this should be better
+		panic("Already a variable with this name in this scope")
+	}
+
+	scope[name.Lexeme] = false
 }
 
 func (r *Resolver) define(name *token.Token) {
@@ -169,7 +188,10 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name *token.Token) {
 	}
 }
 
-func (r *Resolver) resolveFunction(stmt *ast.Function) {
+func (r *Resolver) resolveFunction(stmt *ast.Function, functionType FunctionType) {
+	previousFunctionType := r.currentFunction
+	r.currentFunction = functionType
+
 	r.beginScope()
 	for _, param := range stmt.Params {
 		r.declare(param)
@@ -178,4 +200,6 @@ func (r *Resolver) resolveFunction(stmt *ast.Function) {
 	}
 	r.Resolve(stmt.Body)
 	r.endScope()
+
+	r.currentFunction = previousFunctionType
 }
