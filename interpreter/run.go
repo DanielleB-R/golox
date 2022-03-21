@@ -50,6 +50,9 @@ func run(source string) error {
 
 	// NOTE: We'll need to have a global interpreter to make the repl work right
 	interpreter := NewInterpreter()
+	resolver := NewResolver(interpreter)
+	resolver.Resolve(statements)
+
 	interpreter.Interpret(statements)
 
 	return nil

@@ -17,6 +17,7 @@ type Interpreter struct {
 	environment       *Environment
 	activeReturn      bool
 	activeReturnValue interface{}
+	locals            map[ast.Expr]int
 }
 
 func NewInterpreter() *Interpreter {
@@ -27,6 +28,7 @@ func NewInterpreter() *Interpreter {
 		environment:       globals,
 		activeReturn:      false,
 		activeReturnValue: nil,
+		locals:            map[ast.Expr]int{},
 	}
 }
 
@@ -78,7 +80,7 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 }
 
 func (i *Interpreter) VisitFunction(stmt *ast.Function) {
-	function := NewLoxFunction(stmt)
+	function := NewLoxFunction(stmt, i.environment)
 	i.environment.Define(stmt.Name.Lexeme, function)
 }
 
@@ -197,7 +199,7 @@ func (i *Interpreter) VisitBinary(binary *ast.Binary) interface{} {
 }
 
 func (i *Interpreter) VisitVariable(expr *ast.Variable) interface{} {
-	value, err := i.environment.Get(expr.Name)
+	value, err := i.lookUpVariable(expr.Name, expr)
 	if err != nil {
 		panic(err)
 	}
@@ -206,9 +208,13 @@ func (i *Interpreter) VisitVariable(expr *ast.Variable) interface{} {
 
 func (i *Interpreter) VisitAssign(expr *ast.Assign) interface{} {
 	value := i.evaluate(expr.Value)
-	err := i.environment.Assign(expr.Name, value)
-	if err != nil {
-		panic(err)
+	if distance, ok := i.locals[expr]; ok {
+		i.environment.AssignAt(distance, expr.Name, value)
+	} else {
+		err := i.globals.Assign(expr.Name, value)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return value
 }
@@ -250,6 +256,18 @@ func (i *Interpreter) VisitCall(expr *ast.Call) interface{} {
 func (i *Interpreter) resetReturnValue() {
 	i.activeReturn = false
 	i.activeReturnValue = nil
+}
+
+func (i *Interpreter) resolve(expr ast.Expr, depth int) {
+	i.locals[expr] = depth
+}
+
+func (i *Interpreter) lookUpVariable(name *token.Token, expr ast.Expr) (interface{}, error) {
+	if distance, ok := i.locals[expr]; ok {
+		return i.environment.GetAt(distance, name.Lexeme)
+	} else {
+		return i.globals.Get(name)
+	}
 }
 
 func isTruthy(object interface{}) bool {

@@ -86,3 +86,13 @@ func TestEnclosingEnvironments(t *testing.T) {
 	err = inner.Assign(tokenNamed("c"), nil)
 	require.Error(t, err)
 }
+
+func TestAncestor(t *testing.T) {
+	one := NewEnvironment(nil)
+	two := NewEnvironment(one)
+	three := NewEnvironment(two)
+
+	require.Equal(t, three, three.ancestor(0))
+	require.Equal(t, two, three.ancestor(1))
+	require.Equal(t, one, three.ancestor(2))
+}

@@ -45,16 +45,18 @@ var Clock *NativeFunction = &NativeFunction{
 
 type LoxFunction struct {
 	declaration *ast.Function
+	closure     *Environment
 }
 
-func NewLoxFunction(declaration *ast.Function) *LoxFunction {
+func NewLoxFunction(declaration *ast.Function, closure *Environment) *LoxFunction {
 	return &LoxFunction{
 		declaration: declaration,
+		closure:     closure,
 	}
 }
 
 func (l *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
-	environment := NewEnvironment(interpreter.globals)
+	environment := NewEnvironment(l.closure)
 	for i, param := range l.declaration.Params {
 		environment.Define(param.Lexeme, arguments[i])
 	}
