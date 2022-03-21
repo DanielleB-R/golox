@@ -51,6 +51,11 @@ func (r *Resolver) VisitBlock(stmt *ast.Block) {
 	r.endScope()
 }
 
+func (r *Resolver) VisitClass(stmt *ast.Class) {
+	r.declare(stmt.Name)
+	r.define(stmt.Name)
+}
+
 func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 	r.resolveExpr(stmt.Expression)
 }

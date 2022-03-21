@@ -40,6 +40,9 @@ func (p *Parser) Parse() ([]ast.Stmt, error) {
 // Grammar rules
 
 func (p *Parser) declaration() (ast.Stmt, error) {
+	if p.match(token.CLASS) {
+		return p.class()
+	}
 	if p.match(token.FUN) {
 		return p.function("function")
 	}
@@ -47,6 +50,37 @@ func (p *Parser) declaration() (ast.Stmt, error) {
 		return p.varDeclaration()
 	}
 	return p.statement()
+}
+
+func (p *Parser) class() (ast.Stmt, error) {
+	name, err := p.consume(token.IDENTIFIER, "Expect class name.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(token.LEFT_BRACE, "Expect '{' after class name.")
+	if err != nil {
+		return nil, err
+	}
+
+	methods := []*ast.Function{}
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		fn, err := p.function("method")
+		if err != nil {
+			return nil, err
+		}
+
+		methods = append(methods, fn.(*ast.Function))
+	}
+
+	_, err = p.consume(token.RIGHT_BRACE, "Expect '}' after parameters.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.Class{
+		Name:    name,
+		Methods: methods,
+	}, nil
 }
 
 func (p *Parser) function(kind string) (ast.Stmt, error) {

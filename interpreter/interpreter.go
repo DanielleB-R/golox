@@ -75,13 +75,20 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 	}
 }
 
+func (i *Interpreter) VisitClass(stmt *ast.Class) {
+	i.environment.Define(stmt.Name.Lexeme, nil)
+	class := NewLoxClass(stmt.Name.Lexeme)
+	i.environment.Assign(stmt.Name, class)
+}
+
 func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 	i.evaluate(stmt.Expression)
 }
 
 func (i *Interpreter) VisitFunction(stmt *ast.Function) {
+	i.environment.Define(stmt.Name.Lexeme, nil)
 	function := NewLoxFunction(stmt, i.environment)
-	i.environment.Define(stmt.Name.Lexeme, function)
+	i.environment.Assign(stmt.Name, function)
 }
 
 func (i *Interpreter) VisitIf(stmt *ast.If) {

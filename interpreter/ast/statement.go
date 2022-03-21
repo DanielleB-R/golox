@@ -20,6 +20,7 @@ type Stmt interface {
 
 type StmtVisitor interface {
 	VisitBlock(stmt *Block)
+	VisitClass(stmt *Class)
 	VisitExpressionStmt(stmt *ExpressionStmt)
 	VisitFunction(stmt *Function)
 	VisitIf(stmt *If)
@@ -27,6 +28,16 @@ type StmtVisitor interface {
 	VisitReturn(stmt *Return)
 	VisitVar(stmt *Var)
 	VisitWhile(stmt *While)
+}
+
+type Class struct {
+	Name    *token.Token
+	Methods []*Function
+}
+
+func (*Class) statement() {}
+func (c *Class) Accept(visitor StmtVisitor) {
+	visitor.VisitClass(c)
 }
 
 type ExpressionStmt struct {
