@@ -183,6 +183,15 @@ func (i *Interpreter) VisitSet(set *ast.Set) any {
 	return value
 }
 
+func (i *Interpreter) VisitThis(expr *ast.This) any {
+	value, err := i.lookUpVariable(expr.Keyword, expr)
+	if err != nil {
+		panic(err)
+	}
+	return value
+
+}
+
 func (i *Interpreter) VisitUnary(unary *ast.Unary) interface{} {
 	right := i.evaluate(unary.Right)
 

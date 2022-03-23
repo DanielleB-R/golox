@@ -74,3 +74,9 @@ func (l *LoxFunction) Arity() int {
 func (l *LoxFunction) String() string {
 	return fmt.Sprintf("<fn %s>", l.declaration.Name.Lexeme)
 }
+
+func (l *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
+	environment := NewEnvironment(l.closure)
+	environment.Define("this", instance)
+	return NewLoxFunction(l.declaration, environment)
+}

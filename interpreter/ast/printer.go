@@ -51,6 +51,10 @@ func (p *AstPrinter) VisitSet(set *Set) any {
 	return p.parenthesize(fmt.Sprintf(".%s=", set.Name.Lexeme), set.Object, set.Value)
 }
 
+func (p *AstPrinter) VisitThis(this *This) any {
+	return this.Keyword.Lexeme
+}
+
 func (p *AstPrinter) VisitUnary(unary *Unary) interface{} {
 	return p.parenthesize(unary.Operator.Lexeme, unary.Right)
 }

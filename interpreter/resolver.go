@@ -18,10 +18,18 @@ const (
 	METHOD
 )
 
+type ClassType = int
+
+const (
+	NO_CLASS ClassType = iota
+	CLASS
+)
+
 type Resolver struct {
 	interpreter     *Interpreter
 	scopes          []map[string]bool
 	currentFunction FunctionType
+	currentClass    ClassType
 }
 
 func NewResolver(interpreter *Interpreter) *Resolver {
@@ -29,6 +37,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 		interpreter:     interpreter,
 		scopes:          []map[string]bool{},
 		currentFunction: NO_FUNCTION,
+		currentClass:    NO_CLASS,
 	}
 }
 
@@ -53,13 +62,22 @@ func (r *Resolver) VisitBlock(stmt *ast.Block) {
 }
 
 func (r *Resolver) VisitClass(stmt *ast.Class) {
+	enclosingClass := r.currentClass
+	r.currentClass = CLASS
+
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
+
+	r.beginScope()
+	r.scopes[len(r.scopes)-1]["this"] = true
 
 	for _, method := range stmt.Methods {
 		declaration := METHOD
 		r.resolveFunction(method, declaration)
 	}
+	r.endScope()
+
+	r.currentClass = enclosingClass
 }
 
 func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
@@ -151,6 +169,15 @@ func (r *Resolver) VisitLogical(expr *ast.Logical) interface{} {
 func (r *Resolver) VisitSet(expr *ast.Set) any {
 	r.resolveExpr(expr.Object)
 	r.resolveExpr(expr.Value)
+	return nil
+}
+
+func (r *Resolver) VisitThis(expr *ast.This) any {
+	if r.currentClass == NO_CLASS {
+		panic("Cannot use 'this' outside of a class")
+	}
+
+	r.resolveLocal(expr, expr.Keyword)
 	return nil
 }
 

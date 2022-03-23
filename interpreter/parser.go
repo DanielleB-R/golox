@@ -661,6 +661,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}, nil
 	}
 
+	if p.match(token.THIS) {
+		return &ast.This{
+			Keyword: p.previous(),
+		}, nil
+	}
+
 	if p.match(token.IDENTIFIER) {
 		return &ast.Variable{
 			Name: p.previous(),
