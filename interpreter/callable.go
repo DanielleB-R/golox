@@ -44,14 +44,16 @@ var Clock *NativeFunction = &NativeFunction{
 }
 
 type LoxFunction struct {
-	declaration *ast.Function
-	closure     *Environment
+	declaration   *ast.Function
+	closure       *Environment
+	isInitializer bool
 }
 
-func NewLoxFunction(declaration *ast.Function, closure *Environment) *LoxFunction {
+func NewLoxFunction(declaration *ast.Function, closure *Environment, isInitializer bool) *LoxFunction {
 	return &LoxFunction{
-		declaration: declaration,
-		closure:     closure,
+		declaration:   declaration,
+		closure:       closure,
+		isInitializer: isInitializer,
 	}
 }
 
@@ -62,6 +64,15 @@ func (l *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 	}
 
 	interpreter.executeBlock(l.declaration.Body, environment)
+
+	if l.isInitializer {
+		this, err := l.closure.GetAt(0, "this")
+		if err != nil {
+			panic(err)
+		}
+		return this
+	}
+
 	returnValue := interpreter.activeReturnValue
 	interpreter.resetReturnValue()
 	return returnValue
@@ -78,5 +89,5 @@ func (l *LoxFunction) String() string {
 func (l *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
 	environment := NewEnvironment(l.closure)
 	environment.Define("this", instance)
-	return NewLoxFunction(l.declaration, environment)
+	return NewLoxFunction(l.declaration, environment, l.isInitializer)
 }

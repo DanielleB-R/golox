@@ -80,7 +80,7 @@ func (i *Interpreter) VisitClass(stmt *ast.Class) {
 
 	methods := map[string]*LoxFunction{}
 	for _, method := range stmt.Methods {
-		function := NewLoxFunction(method, i.environment)
+		function := NewLoxFunction(method, i.environment, method.Name.Lexeme == "this")
 		methods[method.Name.Lexeme] = function
 	}
 
@@ -94,7 +94,7 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 
 func (i *Interpreter) VisitFunction(stmt *ast.Function) {
 	i.environment.Define(stmt.Name.Lexeme, nil)
-	function := NewLoxFunction(stmt, i.environment)
+	function := NewLoxFunction(stmt, i.environment, false)
 	i.environment.Assign(stmt.Name, function)
 }
 
