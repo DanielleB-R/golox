@@ -76,7 +76,25 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 }
 
 func (i *Interpreter) VisitClass(stmt *ast.Class) {
+	var superclass *LoxClass
+	if stmt.Superclass != nil {
+		value := i.evaluate(stmt.Superclass)
+		classValue, ok := value.(*LoxClass)
+		if !ok {
+			panic(&RuntimeError{
+				token:   stmt.Superclass.Name,
+				message: "Superclass must be a class",
+			})
+		}
+		superclass = classValue
+	}
+
 	i.environment.Define(stmt.Name.Lexeme, nil)
+
+	if stmt.Superclass != nil {
+		i.environment = NewEnvironment(i.environment)
+		i.environment.Define("super", superclass)
+	}
 
 	methods := map[string]*LoxFunction{}
 	for _, method := range stmt.Methods {
@@ -84,7 +102,12 @@ func (i *Interpreter) VisitClass(stmt *ast.Class) {
 		methods[method.Name.Lexeme] = function
 	}
 
-	class := NewLoxClass(stmt.Name.Lexeme, methods)
+	class := NewLoxClass(stmt.Name.Lexeme, superclass, methods)
+
+	if stmt.Superclass != nil {
+		i.environment = i.environment.enclosing
+	}
+
 	i.environment.Assign(stmt.Name, class)
 }
 
@@ -306,6 +329,31 @@ func (i *Interpreter) VisitCall(expr *ast.Call) interface{} {
 		panic(&RuntimeError{token: expr.Paren, message: fmt.Sprintf("Expected %d arguments but got %d.", function.Arity(), len(arguments))})
 	}
 	return function.Call(i, arguments)
+}
+
+func (i *Interpreter) VisitSuper(expr *ast.Super) any {
+	distance := i.locals[expr]
+	superclassObj, err := i.environment.GetAt(distance, "super")
+	if err != nil {
+		panic(err)
+	}
+	superclass := superclassObj.(*LoxClass)
+	objectObj, err := i.environment.GetAt(distance-1, "this")
+	if err != nil {
+		panic(err)
+	}
+	object := objectObj.(*LoxInstance)
+
+	method := superclass.FindMethod(expr.Method.Lexeme)
+
+	if method == nil {
+		panic(&RuntimeError{
+			token:   expr.Method,
+			message: fmt.Sprintf("Undefined property '%s'.", expr.Method.Lexeme),
+		})
+	}
+
+	return method.Bind(object)
 }
 
 func (i *Interpreter) resetReturnValue() {

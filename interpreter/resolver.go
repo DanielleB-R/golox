@@ -24,6 +24,7 @@ type ClassType = int
 const (
 	NO_CLASS ClassType = iota
 	CLASS
+	SUBCLASS
 )
 
 type Resolver struct {
@@ -69,6 +70,16 @@ func (r *Resolver) VisitClass(stmt *ast.Class) {
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
 
+	if stmt.Superclass != nil {
+		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
+			panic("A class cannot inherit from itself")
+		}
+		r.currentClass = SUBCLASS
+		r.resolveExpr(stmt.Superclass)
+		r.beginScope()
+		r.scopes[len(r.scopes)-1]["super"] = true
+	}
+
 	r.beginScope()
 	r.scopes[len(r.scopes)-1]["this"] = true
 
@@ -79,6 +90,11 @@ func (r *Resolver) VisitClass(stmt *ast.Class) {
 		}
 		r.resolveFunction(method, declaration)
 	}
+
+	if stmt.Superclass != nil {
+		r.endScope()
+	}
+
 	r.endScope()
 
 	r.currentClass = enclosingClass
@@ -177,6 +193,17 @@ func (r *Resolver) VisitLogical(expr *ast.Logical) interface{} {
 func (r *Resolver) VisitSet(expr *ast.Set) any {
 	r.resolveExpr(expr.Object)
 	r.resolveExpr(expr.Value)
+	return nil
+}
+
+func (r *Resolver) VisitSuper(expr *ast.Super) any {
+	if r.currentClass == NO_CLASS {
+		panic("Cannot use 'super' outside of a class")
+	}
+	if r.currentClass != SUBCLASS {
+		panic("Can't use 'super' in a class with no superclasses")
+	}
+	r.resolveLocal(expr, expr.Keyword)
 	return nil
 }
 

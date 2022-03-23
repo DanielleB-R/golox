@@ -11,6 +11,7 @@ var (
 	_ Expr = (*Literal)(nil)
 	_ Expr = (*Logical)(nil)
 	_ Expr = (*Set)(nil)
+	_ Expr = (*Super)(nil)
 	_ Expr = (*This)(nil)
 	_ Expr = (*Unary)(nil)
 	_ Expr = (*Variable)(nil)
@@ -30,6 +31,7 @@ type ExprVisitor interface {
 	VisitLiteral(literal *Literal) interface{}
 	VisitLogical(logical *Logical) interface{}
 	VisitSet(set *Set) any
+	VisitSuper(super *Super) any
 	VisitThis(this *This) any
 	VisitUnary(unary *Unary) interface{}
 	VisitVariable(variable *Variable) interface{}
@@ -116,6 +118,16 @@ func (*Set) expression() {}
 func (s *Set) Accept(visitor ExprVisitor) any {
 
 	return visitor.VisitSet(s)
+}
+
+type Super struct {
+	Keyword *token.Token
+	Method  *token.Token
+}
+
+func (*Super) expression() {}
+func (s *Super) Accept(visitor ExprVisitor) any {
+	return visitor.VisitSuper(s)
 }
 
 type This struct {

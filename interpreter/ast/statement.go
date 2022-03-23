@@ -31,8 +31,9 @@ type StmtVisitor interface {
 }
 
 type Class struct {
-	Name    *token.Token
-	Methods []*Function
+	Name       *token.Token
+	Superclass *Variable
+	Methods    []*Function
 }
 
 func (*Class) statement() {}

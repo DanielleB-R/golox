@@ -51,6 +51,10 @@ func (p *AstPrinter) VisitSet(set *Set) any {
 	return p.parenthesize(fmt.Sprintf(".%s=", set.Name.Lexeme), set.Object, set.Value)
 }
 
+func (p *AstPrinter) VisitSuper(super *Super) any {
+	return fmt.Sprintf("super.%s", super.Method.Lexeme)
+}
+
 func (p *AstPrinter) VisitThis(this *This) any {
 	return this.Keyword.Lexeme
 }
