@@ -69,7 +69,7 @@ func (s *SourceScanner) peekNext() byte {
 	return s.source[s.current+1]
 }
 
-func (s *SourceScanner) addToken(tokenType int, literal interface{}) {
+func (s *SourceScanner) addToken(tokenType int, literal any) {
 	text := s.source[s.start:s.current]
 	s.tokens = append(s.tokens, token.NewToken(tokenType, text, literal, s.line))
 }

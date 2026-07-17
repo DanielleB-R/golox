@@ -74,11 +74,11 @@ var Keywords = map[string]int{
 type Token struct {
 	TokenType int
 	Lexeme    string
-	Literal   interface{}
+	Literal   any
 	Line      int
 }
 
-func NewToken(tokenType int, lexeme string, literal interface{}, line int) *Token {
+func NewToken(tokenType int, lexeme string, literal any, line int) *Token {
 	return &Token{
 		TokenType: tokenType,
 		Lexeme:    lexeme,
