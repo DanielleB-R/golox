@@ -27,9 +27,11 @@ const (
 	SUBCLASS
 )
 
+type Scope = map[string]bool
+
 type Resolver struct {
 	interpreter     *Interpreter
-	scopes          []map[string]bool
+	scopes          []Scope
 	currentFunction FunctionType
 	currentClass    ClassType
 }
@@ -37,7 +39,7 @@ type Resolver struct {
 func NewResolver(interpreter *Interpreter) *Resolver {
 	return &Resolver{
 		interpreter:     interpreter,
-		scopes:          []map[string]bool{},
+		scopes:          nil,
 		currentFunction: NO_FUNCTION,
 		currentClass:    NO_CLASS,
 	}
@@ -149,19 +151,19 @@ func (r *Resolver) VisitWhile(stmt *ast.While) {
 	r.resolveStmt(stmt.Body)
 }
 
-func (r *Resolver) VisitAssign(expr *ast.Assign) interface{} {
+func (r *Resolver) VisitAssign(expr *ast.Assign) any {
 	r.resolveExpr(expr.Value)
 	r.resolveLocal(expr, expr.Name)
 	return nil
 }
 
-func (r *Resolver) VisitBinary(expr *ast.Binary) interface{} {
+func (r *Resolver) VisitBinary(expr *ast.Binary) any {
 	r.resolveExpr(expr.Left)
 	r.resolveExpr(expr.Right)
 	return nil
 }
 
-func (r *Resolver) VisitCall(expr *ast.Call) interface{} {
+func (r *Resolver) VisitCall(expr *ast.Call) any {
 	r.resolveExpr(expr.Callee)
 
 	for _, argument := range expr.Arguments {
@@ -175,16 +177,16 @@ func (r *Resolver) VisitGet(expr *ast.Get) any {
 	return nil
 }
 
-func (r *Resolver) VisitGrouping(expr *ast.Grouping) interface{} {
+func (r *Resolver) VisitGrouping(expr *ast.Grouping) any {
 	r.resolveExpr(expr.Expression)
 	return nil
 }
 
-func (r *Resolver) VisitLiteral(expr *ast.Literal) interface{} {
+func (r *Resolver) VisitLiteral(expr *ast.Literal) any {
 	return nil
 }
 
-func (r *Resolver) VisitLogical(expr *ast.Logical) interface{} {
+func (r *Resolver) VisitLogical(expr *ast.Logical) any {
 	r.resolveExpr(expr.Left)
 	r.resolveExpr(expr.Right)
 	return nil
@@ -216,12 +218,12 @@ func (r *Resolver) VisitThis(expr *ast.This) any {
 	return nil
 }
 
-func (r *Resolver) VisitUnary(expr *ast.Unary) interface{} {
+func (r *Resolver) VisitUnary(expr *ast.Unary) any {
 	r.resolveExpr(expr.Right)
 	return nil
 }
 
-func (r *Resolver) VisitVariable(expr *ast.Variable) interface{} {
+func (r *Resolver) VisitVariable(expr *ast.Variable) any {
 	if len(r.scopes) > 0 {
 		if value, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && value == false {
 			// TODO: error handling is getting messy
@@ -234,7 +236,7 @@ func (r *Resolver) VisitVariable(expr *ast.Variable) interface{} {
 }
 
 func (r *Resolver) beginScope() {
-	r.scopes = append(r.scopes, map[string]bool{})
+	r.scopes = append(r.scopes, Scope{})
 }
 
 func (r *Resolver) endScope() {
