@@ -34,6 +34,10 @@ func (p *Parser) Parse() ([]ast.Stmt, error) {
 		statements = append(statements, stmt)
 	}
 
+	if len(p.errors) != 0 {
+		return nil, p.errors
+	}
+
 	return statements, nil
 }
 
