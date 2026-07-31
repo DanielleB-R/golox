@@ -12,7 +12,7 @@ func RunFile(path string) {
 		fmt.Println("Error reading file", path)
 		os.Exit(1)
 	}
-	err = run(string(script))
+	err = run(string(script), NewInterpreter())
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -20,22 +20,22 @@ func RunFile(path string) {
 	}
 }
 
-// NOTE: This doesn't work! Solve that in a bit
 func RunPrompt() {
 	scanner := bufio.NewScanner(os.Stdin)
+	interpreter := NewInterpreter()
 	for {
 		fmt.Print("> ")
 		if !scanner.Scan() {
 			break
 		}
-		err := run(scanner.Text())
+		err := run(scanner.Text(), interpreter)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 	}
 }
 
-func run(source string) error {
+func run(source string, interpreter *Interpreter) error {
 	scanner := NewSourceScanner(source)
 	tokens, err := scanner.ScanTokens()
 	if err != nil {
@@ -48,8 +48,6 @@ func run(source string) error {
 		return err
 	}
 
-	// NOTE: We'll need to have a global interpreter to make the repl work right
-	interpreter := NewInterpreter()
 	resolver := NewResolver(interpreter)
 	resolver.Resolve(statements)
 

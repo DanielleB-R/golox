@@ -16,7 +16,7 @@ type Interpreter struct {
 	globals           *Environment
 	environment       *Environment
 	activeReturn      bool
-	activeReturnValue interface{}
+	activeReturnValue any
 	locals            map[ast.Expr]int
 }
 
@@ -135,7 +135,7 @@ func (i *Interpreter) VisitPrint(stmt *ast.Print) {
 }
 
 func (i *Interpreter) VisitReturn(stmt *ast.Return) {
-	var value interface{}
+	var value any
 	if stmt.Value != nil {
 		value = i.evaluate(stmt.Value)
 	}
@@ -145,7 +145,7 @@ func (i *Interpreter) VisitReturn(stmt *ast.Return) {
 }
 
 func (i *Interpreter) VisitVar(stmt *ast.Var) {
-	var value interface{}
+	var value any
 	if stmt.Initializer != nil {
 		value = i.evaluate(stmt.Initializer)
 	}
@@ -162,11 +162,11 @@ func (i *Interpreter) VisitWhile(stmt *ast.While) {
 	}
 }
 
-func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
+func (i *Interpreter) evaluate(expr ast.Expr) any {
 	return expr.Accept(i)
 }
 
-func (*Interpreter) VisitLiteral(literal *ast.Literal) interface{} {
+func (*Interpreter) VisitLiteral(literal *ast.Literal) any {
 	return literal.Value
 }
 
@@ -186,7 +186,7 @@ func (i *Interpreter) VisitGet(get *ast.Get) any {
 	})
 }
 
-func (i *Interpreter) VisitGrouping(grouping *ast.Grouping) interface{} {
+func (i *Interpreter) VisitGrouping(grouping *ast.Grouping) any {
 	return i.evaluate(grouping.Expression)
 }
 
@@ -215,7 +215,7 @@ func (i *Interpreter) VisitThis(expr *ast.This) any {
 
 }
 
-func (i *Interpreter) VisitUnary(unary *ast.Unary) interface{} {
+func (i *Interpreter) VisitUnary(unary *ast.Unary) any {
 	right := i.evaluate(unary.Right)
 
 	switch unary.Operator.TokenType {
@@ -230,7 +230,7 @@ func (i *Interpreter) VisitUnary(unary *ast.Unary) interface{} {
 	return nil
 }
 
-func (i *Interpreter) VisitBinary(binary *ast.Binary) interface{} {
+func (i *Interpreter) VisitBinary(binary *ast.Binary) any {
 	left := i.evaluate(binary.Left)
 	right := i.evaluate(binary.Right)
 
@@ -276,7 +276,7 @@ func (i *Interpreter) VisitBinary(binary *ast.Binary) interface{} {
 	return nil
 }
 
-func (i *Interpreter) VisitVariable(expr *ast.Variable) interface{} {
+func (i *Interpreter) VisitVariable(expr *ast.Variable) any {
 	value, err := i.lookUpVariable(expr.Name, expr)
 	if err != nil {
 		panic(err)
@@ -284,7 +284,7 @@ func (i *Interpreter) VisitVariable(expr *ast.Variable) interface{} {
 	return value
 }
 
-func (i *Interpreter) VisitAssign(expr *ast.Assign) interface{} {
+func (i *Interpreter) VisitAssign(expr *ast.Assign) any {
 	value := i.evaluate(expr.Value)
 	if distance, ok := i.locals[expr]; ok {
 		i.environment.AssignAt(distance, expr.Name, value)
@@ -297,7 +297,7 @@ func (i *Interpreter) VisitAssign(expr *ast.Assign) interface{} {
 	return value
 }
 
-func (i *Interpreter) VisitLogical(expr *ast.Logical) interface{} {
+func (i *Interpreter) VisitLogical(expr *ast.Logical) any {
 	left := i.evaluate(expr.Left)
 
 	if expr.Operator.TokenType == token.OR {
@@ -313,10 +313,10 @@ func (i *Interpreter) VisitLogical(expr *ast.Logical) interface{} {
 	return i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) VisitCall(expr *ast.Call) interface{} {
+func (i *Interpreter) VisitCall(expr *ast.Call) any {
 	callee := i.evaluate(expr.Callee)
 
-	arguments := []interface{}{}
+	arguments := []any{}
 	for _, argument := range expr.Arguments {
 		arguments = append(arguments, i.evaluate(argument))
 	}
@@ -365,7 +365,7 @@ func (i *Interpreter) resolve(expr ast.Expr, depth int) {
 	i.locals[expr] = depth
 }
 
-func (i *Interpreter) lookUpVariable(name *token.Token, expr ast.Expr) (interface{}, error) {
+func (i *Interpreter) lookUpVariable(name *token.Token, expr ast.Expr) (any, error) {
 	if distance, ok := i.locals[expr]; ok {
 		return i.environment.GetAt(distance, name.Lexeme)
 	} else {
@@ -373,7 +373,7 @@ func (i *Interpreter) lookUpVariable(name *token.Token, expr ast.Expr) (interfac
 	}
 }
 
-func isTruthy(object interface{}) bool {
+func isTruthy(object any) bool {
 	if object == nil {
 		return false
 	}
@@ -384,11 +384,11 @@ func isTruthy(object interface{}) bool {
 }
 
 // This should be sufficient if I understand how Go equality is implemented
-func isEqual(left interface{}, right interface{}) bool {
+func isEqual(left any, right any) bool {
 	return left == right
 }
 
-func checkNumberOperand(operator *token.Token, operand interface{}) float64 {
+func checkNumberOperand(operator *token.Token, operand any) float64 {
 	numberOperand, ok := operand.(float64)
 	if !ok {
 		panic(&RuntimeError{token: operator, message: "Operand must be a number"})
@@ -396,7 +396,7 @@ func checkNumberOperand(operator *token.Token, operand interface{}) float64 {
 	return numberOperand
 }
 
-func checkNumberOperands(operator *token.Token, left interface{}, right interface{}) (float64, float64) {
+func checkNumberOperands(operator *token.Token, left any, right any) (float64, float64) {
 	leftNumber, ok := left.(float64)
 	rightNumber, ok2 := right.(float64)
 	if !ok || !ok2 {
