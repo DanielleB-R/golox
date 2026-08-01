@@ -19,22 +19,22 @@ var (
 
 type Expr interface {
 	expression()
-	Accept(visitor ExprVisitor) interface{}
+	Accept(visitor ExprVisitor) any
 }
 
 type ExprVisitor interface {
-	VisitAssign(assign *Assign) interface{}
-	VisitBinary(binary *Binary) interface{}
-	VisitCall(call *Call) interface{}
+	VisitAssign(assign *Assign) any
+	VisitBinary(binary *Binary) any
+	VisitCall(call *Call) any
 	VisitGet(get *Get) any
-	VisitGrouping(grouping *Grouping) interface{}
-	VisitLiteral(literal *Literal) interface{}
-	VisitLogical(logical *Logical) interface{}
+	VisitGrouping(grouping *Grouping) any
+	VisitLiteral(literal *Literal) any
+	VisitLogical(logical *Logical) any
 	VisitSet(set *Set) any
 	VisitSuper(super *Super) any
 	VisitThis(this *This) any
-	VisitUnary(unary *Unary) interface{}
-	VisitVariable(variable *Variable) interface{}
+	VisitUnary(unary *Unary) any
+	VisitVariable(variable *Variable) any
 }
 
 type Assign struct {
@@ -43,7 +43,7 @@ type Assign struct {
 }
 
 func (*Assign) expression() {}
-func (a *Assign) Accept(visitor ExprVisitor) interface{} {
+func (a *Assign) Accept(visitor ExprVisitor) any {
 	return visitor.VisitAssign(a)
 }
 
@@ -54,7 +54,7 @@ type Binary struct {
 }
 
 func (*Binary) expression() {}
-func (b *Binary) Accept(visitor ExprVisitor) interface{} {
+func (b *Binary) Accept(visitor ExprVisitor) any {
 	return visitor.VisitBinary(b)
 }
 
@@ -65,7 +65,7 @@ type Call struct {
 }
 
 func (*Call) expression() {}
-func (c *Call) Accept(visitor ExprVisitor) interface{} {
+func (c *Call) Accept(visitor ExprVisitor) any {
 	return visitor.VisitCall(c)
 }
 
@@ -84,16 +84,16 @@ type Grouping struct {
 }
 
 func (*Grouping) expression() {}
-func (g *Grouping) Accept(visitor ExprVisitor) interface{} {
+func (g *Grouping) Accept(visitor ExprVisitor) any {
 	return visitor.VisitGrouping(g)
 }
 
 type Literal struct {
-	Value interface{}
+	Value any
 }
 
 func (*Literal) expression() {}
-func (l *Literal) Accept(visitor ExprVisitor) interface{} {
+func (l *Literal) Accept(visitor ExprVisitor) any {
 	return visitor.VisitLiteral(l)
 }
 
@@ -104,7 +104,7 @@ type Logical struct {
 }
 
 func (*Logical) expression() {}
-func (l *Logical) Accept(visitor ExprVisitor) interface{} {
+func (l *Logical) Accept(visitor ExprVisitor) any {
 	return visitor.VisitLogical(l)
 }
 
@@ -145,7 +145,7 @@ type Unary struct {
 }
 
 func (*Unary) expression() {}
-func (u *Unary) Accept(visitor ExprVisitor) interface{} {
+func (u *Unary) Accept(visitor ExprVisitor) any {
 	return visitor.VisitUnary(u)
 }
 
@@ -154,6 +154,6 @@ type Variable struct {
 }
 
 func (*Variable) expression() {}
-func (v *Variable) Accept(visitor ExprVisitor) interface{} {
+func (v *Variable) Accept(visitor ExprVisitor) any {
 	return visitor.VisitVariable(v)
 }

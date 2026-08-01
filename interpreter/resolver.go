@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+
 	"github.com/DanielleB-R/golox/interpreter/ast"
 	"github.com/DanielleB-R/golox/interpreter/token"
 )
@@ -46,6 +48,18 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 }
 
 func (r *Resolver) Resolve(statements []ast.Stmt) {
+	defer func() {
+		err := recover()
+		if err == nil {
+			return
+		}
+		if readerErr, ok := err.(*ReaderError); ok {
+			fmt.Println(readerErr.Error())
+			return
+		}
+		panic(err)
+	}()
+
 	for _, statement := range statements {
 		r.resolveStmt(statement)
 	}
@@ -67,6 +81,7 @@ func (r *Resolver) VisitBlock(stmt *ast.Block) {
 
 func (r *Resolver) VisitClass(stmt *ast.Class) {
 	enclosingClass := r.currentClass
+	defer func() { r.currentClass = enclosingClass }()
 	r.currentClass = CLASS
 
 	r.declare(stmt.Name)
@@ -74,15 +89,17 @@ func (r *Resolver) VisitClass(stmt *ast.Class) {
 
 	if stmt.Superclass != nil {
 		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
-			panic("A class cannot inherit from itself")
+			panic(&ReaderError{token: stmt.Name, message: "A class cannot inherit from itself"})
 		}
 		r.currentClass = SUBCLASS
 		r.resolveExpr(stmt.Superclass)
 		r.beginScope()
+		defer r.endScope()
 		r.scopes[len(r.scopes)-1]["super"] = true
 	}
 
 	r.beginScope()
+	defer r.endScope()
 	r.scopes[len(r.scopes)-1]["this"] = true
 
 	for _, method := range stmt.Methods {
@@ -92,14 +109,6 @@ func (r *Resolver) VisitClass(stmt *ast.Class) {
 		}
 		r.resolveFunction(method, declaration)
 	}
-
-	if stmt.Superclass != nil {
-		r.endScope()
-	}
-
-	r.endScope()
-
-	r.currentClass = enclosingClass
 }
 
 func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
@@ -127,12 +136,12 @@ func (r *Resolver) VisitPrint(stmt *ast.Print) {
 
 func (r *Resolver) VisitReturn(stmt *ast.Return) {
 	if r.currentFunction == NO_FUNCTION {
-		panic("Can't return from top-level code")
+		panic(&ReaderError{token: stmt.Keyword, message: "Can't return from top-level code"})
 	}
 
 	if stmt.Value != nil {
 		if r.currentFunction == INITIALIZER {
-			panic("Can't return a value from an initializer")
+			panic(&ReaderError{token: stmt.Keyword, message: "Can't return a value from an initializer"})
 		}
 
 		r.resolveExpr(stmt.Value)
@@ -200,10 +209,10 @@ func (r *Resolver) VisitSet(expr *ast.Set) any {
 
 func (r *Resolver) VisitSuper(expr *ast.Super) any {
 	if r.currentClass == NO_CLASS {
-		panic("Cannot use 'super' outside of a class")
+		panic(&ReaderError{token: expr.Keyword, message: "Cannot use 'super' outside of a class"})
 	}
 	if r.currentClass != SUBCLASS {
-		panic("Can't use 'super' in a class with no superclasses")
+		panic(&ReaderError{token: expr.Keyword, message: "Can't use 'super' in a class with no superclasses"})
 	}
 	r.resolveLocal(expr, expr.Keyword)
 	return nil
@@ -211,7 +220,7 @@ func (r *Resolver) VisitSuper(expr *ast.Super) any {
 
 func (r *Resolver) VisitThis(expr *ast.This) any {
 	if r.currentClass == NO_CLASS {
-		panic("Cannot use 'this' outside of a class")
+		panic(&ReaderError{token: expr.Keyword, message: "Cannot use 'this' outside of a class"})
 	}
 
 	r.resolveLocal(expr, expr.Keyword)
@@ -226,8 +235,7 @@ func (r *Resolver) VisitUnary(expr *ast.Unary) any {
 func (r *Resolver) VisitVariable(expr *ast.Variable) any {
 	if len(r.scopes) > 0 {
 		if value, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && value == false {
-			// TODO: error handling is getting messy
-			panic("Can't read local variable in its own initializer")
+			panic(&ReaderError{token: expr.Name, message: "Can't read local variable in its own initializer"})
 		}
 	}
 
@@ -250,8 +258,7 @@ func (r *Resolver) declare(name *token.Token) {
 
 	scope := r.scopes[len(r.scopes)-1]
 	if _, ok := scope[name.Lexeme]; ok {
-		// TODO: this should be better
-		panic("Already a variable with this name in this scope")
+		panic(&ReaderError{token: name, message: "Already a variable with this name in this scope"})
 	}
 
 	scope[name.Lexeme] = false
@@ -277,15 +284,14 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name *token.Token) {
 func (r *Resolver) resolveFunction(stmt *ast.Function, functionType FunctionType) {
 	previousFunctionType := r.currentFunction
 	r.currentFunction = functionType
+	defer func() { r.currentFunction = previousFunctionType }()
 
 	r.beginScope()
+	defer r.endScope()
 	for _, param := range stmt.Params {
 		r.declare(param)
 		r.define(param)
 
 	}
 	r.Resolve(stmt.Body)
-	r.endScope()
-
-	r.currentFunction = previousFunctionType
 }

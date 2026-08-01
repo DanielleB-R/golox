@@ -58,6 +58,15 @@ func (s ParseErrors) Error() string {
 	return strings.Join(errorStrings, "\n")
 }
 
+type ReaderError struct {
+	token   *token.Token
+	message string
+}
+
+func (r *ReaderError) Error() string {
+	return fmt.Sprintf("Runtime error line %d: %s", r.token.Line, r.message)
+}
+
 type RuntimeError struct {
 	token   *token.Token
 	message string
