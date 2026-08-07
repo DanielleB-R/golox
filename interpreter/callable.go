@@ -39,7 +39,7 @@ func (n *NativeFunction) Call(interpreter *Interpreter, arguments []interface{})
 var Clock *NativeFunction = &NativeFunction{
 	arity: 0,
 	behaviour: func(interpreter *Interpreter, arguments []interface{}) interface{} {
-		return time.Now().Unix()
+		return float64(time.Now().Unix())
 	},
 }
 

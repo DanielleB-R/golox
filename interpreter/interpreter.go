@@ -250,7 +250,10 @@ func (i *Interpreter) VisitBinary(binary *ast.Binary) any {
 			r := checkNumberOperand(binary.Operator, right)
 			return l + r
 		case string:
-			return l + right.(string)
+			if rightStr, ok := right.(string); ok {
+				return l + rightStr
+			}
+			panic(&RuntimeError{token: binary.Operator, message: "Operands must be numbers or strings"})
 		default:
 			panic(&RuntimeError{token: binary.Operator, message: "Operands must be numbers or strings"})
 		}
