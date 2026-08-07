@@ -32,14 +32,14 @@ func NewInterpreter() *Interpreter {
 	}
 }
 
-func (i *Interpreter) Interpret(statements []ast.Stmt) {
+func (i *Interpreter) Interpret(statements []ast.Stmt) (outerr error) {
 	defer func() {
 		err := recover()
 		if err == nil {
 			return
 		}
 		if runtimeError, ok := err.(*RuntimeError); ok {
-			fmt.Println(runtimeError.Error())
+			outerr = runtimeError
 			return
 		}
 		panic(err)
@@ -49,6 +49,7 @@ func (i *Interpreter) Interpret(statements []ast.Stmt) {
 		i.execute(statement)
 		i.resetReturnValue()
 	}
+	return nil
 }
 
 func (i *Interpreter) execute(stmt ast.Stmt) {

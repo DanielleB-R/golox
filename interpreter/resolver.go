@@ -51,7 +51,7 @@ func (r *Resolver) Resolve(statements []ast.Stmt) (err error) {
 		if recovered == nil {
 			return
 		}
-		if readerErr, ok := recovered.(*ReaderError); ok {
+		if readerErr, ok := recovered.(*ResolverError); ok {
 			err = readerErr
 			return
 		}
@@ -92,7 +92,7 @@ func (r *Resolver) VisitClass(stmt *ast.Class) {
 
 	if stmt.Superclass != nil {
 		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
-			panic(&ReaderError{token: stmt.Name, message: "A class cannot inherit from itself"})
+			panic(&ResolverError{token: stmt.Name, message: "A class cannot inherit from itself"})
 		}
 		r.currentClass = SUBCLASS
 		r.resolveExpr(stmt.Superclass)
@@ -139,12 +139,12 @@ func (r *Resolver) VisitPrint(stmt *ast.Print) {
 
 func (r *Resolver) VisitReturn(stmt *ast.Return) {
 	if r.currentFunction == NO_FUNCTION {
-		panic(&ReaderError{token: stmt.Keyword, message: "Can't return from top-level code"})
+		panic(&ResolverError{token: stmt.Keyword, message: "Can't return from top-level code"})
 	}
 
 	if stmt.Value != nil {
 		if r.currentFunction == INITIALIZER {
-			panic(&ReaderError{token: stmt.Keyword, message: "Can't return a value from an initializer"})
+			panic(&ResolverError{token: stmt.Keyword, message: "Can't return a value from an initializer"})
 		}
 
 		r.resolveExpr(stmt.Value)
@@ -212,10 +212,10 @@ func (r *Resolver) VisitSet(expr *ast.Set) any {
 
 func (r *Resolver) VisitSuper(expr *ast.Super) any {
 	if r.currentClass == NO_CLASS {
-		panic(&ReaderError{token: expr.Keyword, message: "Cannot use 'super' outside of a class"})
+		panic(&ResolverError{token: expr.Keyword, message: "Cannot use 'super' outside of a class"})
 	}
 	if r.currentClass != SUBCLASS {
-		panic(&ReaderError{token: expr.Keyword, message: "Can't use 'super' in a class with no superclasses"})
+		panic(&ResolverError{token: expr.Keyword, message: "Can't use 'super' in a class with no superclasses"})
 	}
 	r.resolveLocal(expr, expr.Keyword)
 	return nil
@@ -223,7 +223,7 @@ func (r *Resolver) VisitSuper(expr *ast.Super) any {
 
 func (r *Resolver) VisitThis(expr *ast.This) any {
 	if r.currentClass == NO_CLASS {
-		panic(&ReaderError{token: expr.Keyword, message: "Cannot use 'this' outside of a class"})
+		panic(&ResolverError{token: expr.Keyword, message: "Cannot use 'this' outside of a class"})
 	}
 
 	r.resolveLocal(expr, expr.Keyword)
@@ -238,7 +238,7 @@ func (r *Resolver) VisitUnary(expr *ast.Unary) any {
 func (r *Resolver) VisitVariable(expr *ast.Variable) any {
 	if len(r.scopes) > 0 {
 		if value, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && value == false {
-			panic(&ReaderError{token: expr.Name, message: "Can't read local variable in its own initializer"})
+			panic(&ResolverError{token: expr.Name, message: "Can't read local variable in its own initializer"})
 		}
 	}
 
@@ -261,7 +261,7 @@ func (r *Resolver) declare(name *token.Token) {
 
 	scope := r.scopes[len(r.scopes)-1]
 	if _, ok := scope[name.Lexeme]; ok {
-		panic(&ReaderError{token: name, message: "Already a variable with this name in this scope"})
+		panic(&ResolverError{token: name, message: "Already a variable with this name in this scope"})
 	}
 
 	scope[name.Lexeme] = false

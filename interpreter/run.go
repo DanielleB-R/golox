@@ -54,7 +54,5 @@ func run(source string, interpreter *Interpreter) error {
 		return err
 	}
 
-	interpreter.Interpret(statements)
-
-	return nil
+	return interpreter.Interpret(statements)
 }
