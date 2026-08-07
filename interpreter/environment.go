@@ -13,13 +13,17 @@ type Environment struct {
 
 func NewEnvironment(enclosing *Environment) *Environment {
 	return &Environment{
-		values:    make(map[string]any),
+		values:    nil,
 		enclosing: enclosing,
 	}
 }
 
 func (e *Environment) Define(name string, value any) {
-	e.values[name] = value
+	if e.values == nil {
+		e.values = map[string]any{name: value}
+	} else {
+		e.values[name] = value
+	}
 }
 
 func (e *Environment) Assign(name *token.Token, value any) error {
