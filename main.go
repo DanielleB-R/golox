@@ -9,7 +9,7 @@ import (
 
 func main() {
 	if len(os.Args) > 2 {
-		fmt.Println("Usage: golox [script]")
+		fmt.Fprintln(os.Stderr, "Usage: golox [script]")
 		os.Exit(64)
 	} else if len(os.Args) == 2 {
 		interpreter.RunFile(os.Args[1])

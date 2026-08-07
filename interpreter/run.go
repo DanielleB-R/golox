@@ -9,13 +9,13 @@ import (
 func RunFile(path string) {
 	script, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("Error reading file", path)
+		fmt.Fprintln(os.Stderr, "Error reading file", path)
 		os.Exit(1)
 	}
 	err = run(string(script), NewInterpreter())
 
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(65)
 	}
 }
@@ -30,7 +30,7 @@ func RunPrompt() {
 		}
 		err := run(scanner.Text(), interpreter)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }

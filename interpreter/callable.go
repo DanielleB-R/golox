@@ -15,13 +15,13 @@ var (
 )
 
 type Callable interface {
-	Call(interpreter *Interpreter, arguments []interface{}) interface{}
+	Call(interpreter *Interpreter, arguments []any) any
 	Arity() int
 }
 
 type NativeFunction struct {
 	arity     int
-	behaviour func(*Interpreter, []interface{}) interface{}
+	behaviour func(*Interpreter, []any) any
 }
 
 func (*NativeFunction) String() string {
@@ -32,13 +32,13 @@ func (n *NativeFunction) Arity() int {
 	return n.arity
 }
 
-func (n *NativeFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
+func (n *NativeFunction) Call(interpreter *Interpreter, arguments []any) any {
 	return n.behaviour(interpreter, arguments)
 }
 
 var Clock *NativeFunction = &NativeFunction{
 	arity: 0,
-	behaviour: func(interpreter *Interpreter, arguments []interface{}) interface{} {
+	behaviour: func(interpreter *Interpreter, arguments []any) any {
 		return float64(time.Now().Unix())
 	},
 }
@@ -57,7 +57,7 @@ func NewLoxFunction(declaration *ast.Function, closure *Environment, isInitializ
 	}
 }
 
-func (l *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
+func (l *LoxFunction) Call(interpreter *Interpreter, arguments []any) any {
 	environment := NewEnvironment(l.closure)
 	for i, param := range l.declaration.Params {
 		environment.Define(param.Lexeme, arguments[i])

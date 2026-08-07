@@ -15,15 +15,15 @@ func (p *AstPrinter) Print(expr Expr) string {
 	return expr.Accept(p).(string)
 }
 
-func (p *AstPrinter) VisitAssign(assign *Assign) interface{} {
+func (p *AstPrinter) VisitAssign(assign *Assign) any {
 	return p.parenthesize("=", &Variable{Name: assign.Name}, assign.Value)
 }
 
-func (p *AstPrinter) VisitBinary(binary *Binary) interface{} {
+func (p *AstPrinter) VisitBinary(binary *Binary) any {
 	return p.parenthesize(binary.Operator.Lexeme, binary.Left, binary.Right)
 }
 
-func (p *AstPrinter) VisitCall(call *Call) interface{} {
+func (p *AstPrinter) VisitCall(call *Call) any {
 	callee := p.Print(call.Callee)
 	return p.parenthesize(callee, call.Arguments...)
 }
@@ -32,18 +32,18 @@ func (p *AstPrinter) VisitGet(get *Get) any {
 	return p.parenthesize("."+get.Name.Lexeme, get.Object)
 }
 
-func (p *AstPrinter) VisitGrouping(grouping *Grouping) interface{} {
+func (p *AstPrinter) VisitGrouping(grouping *Grouping) any {
 	return p.parenthesize("group", grouping.Expression)
 }
 
-func (p *AstPrinter) VisitLiteral(literal *Literal) interface{} {
+func (p *AstPrinter) VisitLiteral(literal *Literal) any {
 	if literal.Value == nil {
 		return "nil"
 	}
 	return fmt.Sprint(literal.Value)
 }
 
-func (p *AstPrinter) VisitLogical(logical *Logical) interface{} {
+func (p *AstPrinter) VisitLogical(logical *Logical) any {
 	return p.parenthesize(logical.Operator.Lexeme, logical.Left, logical.Right)
 }
 
@@ -59,11 +59,11 @@ func (p *AstPrinter) VisitThis(this *This) any {
 	return this.Keyword.Lexeme
 }
 
-func (p *AstPrinter) VisitUnary(unary *Unary) interface{} {
+func (p *AstPrinter) VisitUnary(unary *Unary) any {
 	return p.parenthesize(unary.Operator.Lexeme, unary.Right)
 }
 
-func (p *AstPrinter) VisitVariable(variable *Variable) interface{} {
+func (p *AstPrinter) VisitVariable(variable *Variable) any {
 	return variable.Name.Lexeme
 }
 
