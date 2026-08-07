@@ -237,7 +237,7 @@ func (r *Resolver) VisitUnary(expr *ast.Unary) any {
 
 func (r *Resolver) VisitVariable(expr *ast.Variable) any {
 	if len(r.scopes) > 0 {
-		if value, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && value == false {
+		if value, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && !value {
 			panic(&ResolverError{token: expr.Name, message: "Can't read local variable in its own initializer"})
 		}
 	}

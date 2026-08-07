@@ -86,7 +86,7 @@ func (p *Parser) class() (ast.Stmt, error) {
 		methods = append(methods, fn.(*ast.Function))
 	}
 
-	_, err = p.consume(token.RIGHT_BRACE, "Expect '}' after parameters.")
+	_, err = p.consume(token.RIGHT_BRACE, "Expect '}' after class body.")
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (p *Parser) function(kind string) (ast.Stmt, error) {
 	if !p.check(token.RIGHT_PAREN) {
 		for {
 			if len(parameters) >= 255 {
-				return nil, &ParseError{token: p.peek(), message: "Can't have more than 255 parameters"}
+				return nil, &ParseError{token: p.peek(), message: "Can't have more than 255 parameters."}
 			}
 			name, err := p.consume(token.IDENTIFIER, "Expect parameter name.")
 			if err != nil {
@@ -227,7 +227,7 @@ func (p *Parser) forStatement() (ast.Stmt, error) {
 			return nil, err
 		}
 	}
-	_, err = p.consume(token.SEMICOLON, "Expect ';' after loop condition")
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after loop condition.")
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (p *Parser) forStatement() (ast.Stmt, error) {
 			return nil, err
 		}
 	}
-	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after for clauses")
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after for clauses.")
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +286,7 @@ func (p *Parser) ifStatement() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after if condition")
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after if condition.")
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +356,7 @@ func (p *Parser) whileStatement() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after while condition")
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after while condition.")
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +383,7 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 		statements = append(statements, statement)
 	}
 
-	_, err := p.consume(token.RIGHT_BRACE, "Expect '}' after block")
+	_, err := p.consume(token.RIGHT_BRACE, "Expect '}' after block.")
 	if err != nil {
 		return nil, err
 	}
@@ -629,7 +629,7 @@ func (p *Parser) finishCall(callee ast.Expr) (ast.Expr, error) {
 				// NOTE: this should be non-resynchronizing
 				return nil, &ParseError{
 					token:   p.peek(),
-					message: "Can't have more than 255 arguments",
+					message: "Can't have more than 255 arguments.",
 				}
 			}
 			expression, err := p.expression()
@@ -680,11 +680,11 @@ func (p *Parser) primary() (ast.Expr, error) {
 
 	if p.match(token.SUPER) {
 		keyword := p.previous()
-		_, err := p.consume(token.DOT, "Expect '.' after 'super'")
+		_, err := p.consume(token.DOT, "Expect '.' after 'super'.")
 		if err != nil {
 			return nil, err
 		}
-		method, err := p.consume(token.IDENTIFIER, "Expect superclass method name")
+		method, err := p.consume(token.IDENTIFIER, "Expect superclass method name.")
 		if err != nil {
 			return nil, err
 		}

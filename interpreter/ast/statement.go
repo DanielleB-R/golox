@@ -4,6 +4,7 @@ import "github.com/DanielleB-R/golox/interpreter/token"
 
 var (
 	_ Stmt = (*Block)(nil)
+	_ Stmt = (*Class)(nil)
 	_ Stmt = (*ExpressionStmt)(nil)
 	_ Stmt = (*Function)(nil)
 	_ Stmt = (*If)(nil)
