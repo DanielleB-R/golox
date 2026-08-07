@@ -577,13 +577,15 @@ func (p *Parser) factor() (ast.Expr, error) {
 
 func (p *Parser) unary() (ast.Expr, error) {
 	if p.match(token.BANG, token.MINUS) {
+		operator := p.previous()
+
 		right, err := p.unary()
 		if err != nil {
 			return nil, err
 		}
 
 		return &ast.Unary{
-			Operator: p.previous(),
+			Operator: operator,
 			Right:    right,
 		}, nil
 	}

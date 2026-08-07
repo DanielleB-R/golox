@@ -70,6 +70,7 @@ func (l *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		if err != nil {
 			panic(err)
 		}
+		interpreter.resetReturnValue()
 		return this
 	}
 

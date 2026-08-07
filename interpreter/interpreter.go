@@ -98,7 +98,7 @@ func (i *Interpreter) VisitClass(stmt *ast.Class) {
 
 	methods := map[string]*LoxFunction{}
 	for _, method := range stmt.Methods {
-		function := NewLoxFunction(method, i.environment, method.Name.Lexeme == "this")
+		function := NewLoxFunction(method, i.environment, method.Name.Lexeme == "init")
 		methods[method.Name.Lexeme] = function
 	}
 
