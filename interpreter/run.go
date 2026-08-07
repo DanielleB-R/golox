@@ -49,7 +49,10 @@ func run(source string, interpreter *Interpreter) error {
 	}
 
 	resolver := NewResolver(interpreter)
-	resolver.Resolve(statements)
+	err = resolver.Resolve(statements)
+	if err != nil {
+		return err
+	}
 
 	interpreter.Interpret(statements)
 

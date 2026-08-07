@@ -1,8 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/DanielleB-R/golox/interpreter/ast"
 	"github.com/DanielleB-R/golox/interpreter/token"
 )
@@ -47,20 +45,21 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 	}
 }
 
-func (r *Resolver) Resolve(statements []ast.Stmt) {
+func (r *Resolver) Resolve(statements []ast.Stmt) (err error) {
 	defer func() {
-		err := recover()
-		if err == nil {
+		recovered := recover()
+		if recovered == nil {
 			return
 		}
-		if readerErr, ok := err.(*ReaderError); ok {
-			fmt.Println(readerErr.Error())
+		if readerErr, ok := recovered.(*ReaderError); ok {
+			err = readerErr
 			return
 		}
-		panic(err)
+		panic(recovered)
 	}()
 
 	r.resolveStmts(statements)
+	return nil
 }
 
 func (r *Resolver) resolveStmts(statements []ast.Stmt) {
@@ -79,8 +78,8 @@ func (r *Resolver) resolveExpr(expr ast.Expr) {
 
 func (r *Resolver) VisitBlock(stmt *ast.Block) {
 	r.beginScope()
+	defer r.endScope()
 	r.resolveStmts(stmt.Statements)
-	r.endScope()
 }
 
 func (r *Resolver) VisitClass(stmt *ast.Class) {
