@@ -60,6 +60,10 @@ func (r *Resolver) Resolve(statements []ast.Stmt) {
 		panic(err)
 	}()
 
+	r.resolveStmts(statements)
+}
+
+func (r *Resolver) resolveStmts(statements []ast.Stmt) {
 	for _, statement := range statements {
 		r.resolveStmt(statement)
 	}
@@ -75,7 +79,7 @@ func (r *Resolver) resolveExpr(expr ast.Expr) {
 
 func (r *Resolver) VisitBlock(stmt *ast.Block) {
 	r.beginScope()
-	r.Resolve(stmt.Statements)
+	r.resolveStmts(stmt.Statements)
 	r.endScope()
 }
 
@@ -293,5 +297,5 @@ func (r *Resolver) resolveFunction(stmt *ast.Function, functionType FunctionType
 		r.define(param)
 
 	}
-	r.Resolve(stmt.Body)
+	r.resolveStmts(stmt.Body)
 }
