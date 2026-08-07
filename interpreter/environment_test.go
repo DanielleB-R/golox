@@ -96,3 +96,91 @@ func TestAncestor(t *testing.T) {
 	require.Equal(t, two, three.ancestor(1))
 	require.Equal(t, one, three.ancestor(2))
 }
+
+func TestDefineNilIsNotAnUndefinedVariable(t *testing.T) {
+	environment := NewEnvironment(nil)
+	environment.Define("a", nil)
+
+	result, err := environment.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Nil(t, result)
+}
+
+func TestRedefineOverwritesValueInSameScope(t *testing.T) {
+	environment := NewEnvironment(nil)
+	environment.Define("a", 1)
+	environment.Define("a", 2)
+
+	result, err := environment.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, 2, result)
+}
+
+func TestAssignToShadowedVariableDoesNotAffectOuterScope(t *testing.T) {
+	outer := NewEnvironment(nil)
+	outer.Define("a", 1)
+	inner := NewEnvironment(outer)
+	inner.Define("a", 2)
+
+	require.NoError(t, inner.Assign(tokenNamed("a"), 3))
+
+	result, err := inner.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, 3, result)
+
+	result, err = outer.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, 1, result)
+}
+
+func TestGetAtReadsFromTheSpecifiedAncestor(t *testing.T) {
+	outer := NewEnvironment(nil)
+	outer.Define("a", "outer")
+	inner := NewEnvironment(outer)
+	inner.Define("a", "inner")
+
+	result, err := inner.GetAt(0, "a")
+	require.NoError(t, err)
+	require.Equal(t, "inner", result)
+
+	result, err = inner.GetAt(1, "a")
+	require.NoError(t, err)
+	require.Equal(t, "outer", result)
+}
+
+func TestAssignAtWritesToTheSpecifiedAncestor(t *testing.T) {
+	outer := NewEnvironment(nil)
+	outer.Define("a", "outer")
+	inner := NewEnvironment(outer)
+
+	inner.AssignAt(1, tokenNamed("a"), "changed")
+
+	result, err := outer.Get(tokenNamed("a"))
+	require.NoError(t, err)
+	require.Equal(t, "changed", result)
+}
+
+func TestGetAtWithUndeclaredNameReturnsNilRatherThanError(t *testing.T) {
+	// GetAt trusts the resolver to have already validated the name exists;
+	// it does not itself check, so a bad distance/name silently yields nil.
+	environment := NewEnvironment(nil)
+
+	result, err := environment.GetAt(0, "never-defined")
+	require.NoError(t, err)
+	require.Nil(t, result)
+}
+
+func TestGetOnGlobalEnvironmentWithNoEnclosingReturnsError(t *testing.T) {
+	environment := NewEnvironment(nil)
+
+	_, err := environment.Get(tokenNamed("missing"))
+	require.Error(t, err)
+}
+
+func TestAssignUndefinedVariableDoesNotDefineIt(t *testing.T) {
+	environment := NewEnvironment(nil)
+
+	err := environment.Assign(tokenNamed("a"), 1)
+	require.Error(t, err)
+	require.Len(t, environment.values, 0)
+}
